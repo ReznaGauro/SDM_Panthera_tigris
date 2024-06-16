@@ -1,13 +1,13 @@
 # ############### Spatial modeling of Panthera tigris in Nepal ################
 ###############################################################################
 
-<<<<<<< HEAD
+# <<<<<<< 
 # Install and load the necesary packages
 =======
 # Install and load the necessary packages
 install.packages("dismo")
 install.packages("biomod2")
->>>>>>> 9112ba0710a4c57b2153c739a9f16f3de8b26d30
+# >>>>>>> 
 
 library(dismo)
 library(biomod2)
