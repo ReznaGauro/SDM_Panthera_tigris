@@ -111,10 +111,10 @@ Back.cov<-data.frame(st_drop_geometry(back),Pres=0)
 # combine
 all.cov<-rbind(Pres.cov,Back.cov)
 
-# Create a model
+# let's first have a look with Bioclim model
 # Biolclim() function performs a distribution model based on 
 # the envelope modelling approach and takes presence data only
-# The Bioclim() algorithm assess the suitability of a location by comparing 
+# It assesses the suitability of a location by comparing 
 # the values of environmental variables at that location to the distribution of 
 # values at known presence locations
 bc_tiger <- bioclim(Pres.cov[,c('MeanTemp.', 'Temp.Range', 'AnnualPrecip.')])
