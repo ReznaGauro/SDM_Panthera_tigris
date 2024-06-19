@@ -78,7 +78,7 @@ plot(env, xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
 # Generate some background points for the study area
 set.seed(123)
-back <- spatSample(env, size=500000, as.points=TRUE, method="random", na.rm=TRUE)
+back <- spatSample(env, size=10000, as.points=TRUE, method="random", na.rm=TRUE)
 
 # convert to sf object 
 back<-st_as_sf(back)
