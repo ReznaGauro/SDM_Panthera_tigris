@@ -10,8 +10,9 @@ library(rnaturalearthdata)
 library(sf)
 library(geodata)
 
+
 # Download the occurrence data for Panthera tigris from GBIF
-tiger <- gbif("panthera", "tigris*", sp=TRUE)
+tiger <- gbif("Panthera", "tigris*", sp=TRUE)
 
 # change the projection to WGS84
 crs(tiger) <-"epsg:4326" 
@@ -49,7 +50,7 @@ env_clipped <- lapply(env_list, function(x) mask(x, nepal))
 
 # Add occurrence data and Nepal shapefile to the plot and add the first env layer
 plot(nepal)
-plot(env_clipped[[1]], add=T)
+plot(env_clipped[[1]], add=T) # Mean annual air temperature
 plot(tiger, add = TRUE, col = "orange", pch = 19)
 
 # Check the names of all env layers
@@ -78,7 +79,7 @@ plot(env, xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
 # Generate some background points for the study area
 set.seed(123)
-back <- spatSample(env, size=10000, as.points=TRUE, method="random", na.rm=TRUE)
+back <- spatSample(env, size=50000, as.points=TRUE, method="random", na.rm=TRUE)
 
 # convert to sf object 
 back<-st_as_sf(back)
@@ -105,36 +106,8 @@ head(Pres.cov)
 # create data frame for background values 
 Back.cov<-data.frame(st_drop_geometry(back),Pres=0)
 
-# create data frame for background values 
-Back.cov<-data.frame(st_drop_geometry(back),Pres=0)
-
 # combine
 all.cov<-rbind(Pres.cov,Back.cov)
-
-# let's first have a look with Bioclim model
-# Biolclim() function performs a distribution model based on 
-# the envelope modelling approach and takes presence data only
-# It assesses the suitability of a location by comparing 
-# the values of environmental variables at that location to the distribution of 
-# values at known presence locations
-bc_tiger <- bioclim(Pres.cov[,c('MeanTemp.', 'Temp.Range', 'AnnualPrecip.')])
-
-# Predict the model
-bioclim.map <- predict(env, bc_tiger)
-
-# plot
-plot(bioclim.map, xlim = c(xmin, xmax), ylim = c(ymin, ymax), main = "bioclim: MeanTemp.,Temp.Range,AnnualPrecip.")
-
-# Predict from all bioclimatic variables
-bc_tiger2<-bioclim(Pres.cov[,1:8])
-
-bc_tiger2
-
-# Predict the model with all the bioclimatic variables
-bioclim.map2 <- predict(env, bc_tiger2)
-
-plot(bioclim.map2, xlim = c(xmin, xmax), ylim = c(ymin, ymax), main = "bioclimAll")
-
 
 # The randomForest model takes two arguments - parameters that can be tuned 
 # mtry and ntree. mtry refers to the number of predictor variables to try at 
@@ -168,17 +141,17 @@ kfold_back <- kfold(Back.cov, folds)
 eRF<-list()
 par(mfrow=c(2,3))
 
-for (i in 1:folds) {
-  train <- Pres.cov[kfold_pres!= i,]
+for (i in 1:folds) {                #Cross validation loop
+  train <- Pres.cov[kfold_pres!= i,] #Splitting data into training and testing
   test <- Pres.cov[kfold_pres == i,]
   backTrain<-Back.cov[kfold_back!=i,]
   backTest<-Back.cov[kfold_back==i,]
-  dataTrain<-rbind(train,backTrain)
+  dataTrain<-rbind(train,backTrain)  #Combining the training and testing data
   dataTest<-rbind(test,backTest)
-  RF_eval <- randomForest(as.factor(Pres)~., data=dataTrain)#this is the RF model
-  rf.pred <- predict(RF_eval, type="prob")[,2]#make prediction
-  eRF[[i]]<-evaluate(p = rf.pred[which(dataTrain$Pres == "1")], #set p to be 1s from the dataTrain object 
-                     a = rf.pred[which(dataTrain$Pres == "0")])# set a to be 0s from the dataTrain object
+  RF_eval <- randomForest(as.factor(Pres)~., data=dataTrain) #train our RF model
+  rf.pred <- predict(RF_eval, type="prob")[,2] #make prediction
+  eRF[[i]]<-evaluate(p = rf.pred[which(dataTrain$Pres == "1")], #evaluating the model, set p to be 1s from the dataTrain object 
+                     a = rf.pred[which(dataTrain$Pres == "0")]) # set a to be 0s from the dataTrain object
   
   #check the AUC by plotting ROC values
   
@@ -194,7 +167,7 @@ eRF
 
 aucRF <- sapply( eRF, function(x){slot(x, 'auc')} )
 
-# Get maxTPR+TNR for the Random Forest model
+# Get maxTPR+TNR (true postive and true negative) for the Random Forest model
 
 Opt_RF<-sapply( eRF, function(x){ x@t[which.max(x@TPR + x@TNR)] } )
 
