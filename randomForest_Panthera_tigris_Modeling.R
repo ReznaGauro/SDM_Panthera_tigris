@@ -84,8 +84,11 @@ nrow(back)
 # convert to sf object 
 back<-st_as_sf(back)
 
-# check number of background points
-nrow(back)
+# plot the background points
+plot(env, xlim = c(xmin, xmax), ylim = c(ymin, ymax), add = T)
+plot(tiger, add = TRUE, col = "orange", pch = 19)
+plot(back, add = T, col = "black", pch = 19)
+
 # get environmental covariates at presence locations
 eP<-extract(env,tiger)
 
@@ -122,7 +125,7 @@ tuneRF(x=all.cov[,1:8],y=as.factor(all.cov$Pres)) #checking for model fitting
 # If the Out of Box (OOB) error statistic is lowest with an mtry of 1 
 # so, go with that for fitting the model
 
-rf.tiger<-randomForest(as.factor(Pres)~.,mtry=1,ntree=500,data=all.cov)
+rf.tiger<-randomForest(as.factor(Pres)~.,mtry=4,ntree=500,data=all.cov)
 
 # use the varImpPlot() function to get a measure of variable importance
 varImpPlot(rf.tiger)
@@ -177,9 +180,9 @@ Mean_OptRF <- mean(Opt_RF)
 # Let's predict and map the distribution estimate
 prRF <- predict(env, rf.tiger,type="prob",index=2)
 par(mfrow=c(1,2))
-plot(prRF, xlim = c(xmin, xmax), ylim = c(ymin, ymax), main='Random Forest Prediction for Panthera tigris in Nepal')
+plot(prRF, xlim = c(xmin, xmax), ylim = c(ymin, ymax), main='Panthera tigris distribution in Nepal', xlab='Longitude', ylab='Latitude')
 
-plot(prRF > Mean_OptRF, xlim = c(xmin, xmax), ylim = c(ymin, ymax), main='presence/absence')
+plot(prRF > Mean_OptRF, xlim = c(xmin, xmax), ylim = c(ymin, ymax), main='presence/absence', xlab='Longitude', ylab='Latitude')
 
 # ############################################################################################
 # ####################### End ###############################################################
