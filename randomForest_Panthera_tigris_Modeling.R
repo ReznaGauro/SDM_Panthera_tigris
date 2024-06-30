@@ -62,6 +62,9 @@ env <- env_clipped[c(1,4,8, 9, 15,16,17, 18)]
 names(env)
 env <- rast(env)
 
+# Check for the multicollinearity between the environmental variables
+cor(env)
+
 # Rename each layer to a more meaningful name
 names(env) <- c("mean annual air temperature", "annual precipitation amount", "mean monthly precipitation amount of the wettest quarter",
                 "mean monthly precipitation amount of the driest quarter", "Precip.Wettest",
