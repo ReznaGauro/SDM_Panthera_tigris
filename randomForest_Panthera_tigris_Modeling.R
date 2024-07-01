@@ -62,9 +62,6 @@ env <- env_clipped[c(1,4,8, 9, 15,16,17, 18)]
 names(env)
 env <- rast(env)
 
-# Check for the multicollinearity between the environmental variables
-cor(env)
-
 # Rename each layer to a more meaningful name
 names(env) <- c("mean annual air temperature", "annual precipitation amount", "mean monthly precipitation amount of the wettest quarter",
                 "mean monthly precipitation amount of the driest quarter", "Precip.Wettest",
@@ -88,7 +85,7 @@ nrow(back)
 back<-st_as_sf(back)
 
 # plot the background points
-plot(env, xlim = c(xmin, xmax), ylim = c(ymin, ymax), add = T)
+plot(env[[1]], xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 plot(tiger, add = TRUE, col = "orange", pch = 19)
 plot(back, add = T, col = "black", pch = 19)
 
@@ -120,15 +117,12 @@ all.cov<-rbind(Pres.cov,Back.cov)
 # each iteration of the model and and ntree specifies the number of trees grown.
 # let's use 500 as the default value which is mostly used. Model performance is 
 # sensitive to mtry than ntree and this can be tuned with the tuneRF function.
+# mtry is the number of variables considered at each split in the decision trees
 
-
-# tune mtry
-tuneRF(x=all.cov[,1:8],y=as.factor(all.cov$Pres)) #checking for model fitting
-
-# If the Out of Box (OOB) error statistic is lowest with an mtry of 1 
+# If the Out of Box (OOB) error statistic is lowest with an mtry of "n" 
 # so, go with that for fitting the model
 
-rf.tiger<-randomForest(as.factor(Pres)~.,mtry=4,ntree=500,data=all.cov)
+rf.tiger<-randomForest(as.factor(Pres)~.,mtry=2,ntree=500,data=all.cov)
 
 # use the varImpPlot() function to get a measure of variable importance
 varImpPlot(rf.tiger)
@@ -156,10 +150,10 @@ for (i in 1:folds) {                #Cross validation loop
   dataTest<-rbind(test,backTest)
   RF_eval <- randomForest(as.factor(Pres)~., data=dataTrain) #train our RF model
   rf.pred <- predict(RF_eval, type="prob")[,2] #make prediction
-  eRF[[i]]<-evaluate(p = rf.pred[which(dataTrain$Pres == "1")], #evaluating the model, set p to be 1s from the dataTrain object 
-                     a = rf.pred[which(dataTrain$Pres == "0")]) # set a to be 0s from the dataTrain object
+  eRF[[i]]<-evaluate(p = rf.pred[which(dataTrain$Pres == "1")], #evaluating the model, set "p" to be 1s from the dataTrain object 
+                     a = rf.pred[which(dataTrain$Pres == "0")]) # set "a" to be 0s from the dataTrain object
   
-  #check the AUC by plotting ROC values
+  #check the AUC by plotting ROC (Receiver Operating Characteristic) values
   
   plot(eRF[[i]],'ROC')
   
